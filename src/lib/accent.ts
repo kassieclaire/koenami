@@ -147,6 +147,9 @@ function clear(svg: SVGSVGElement) {
 	[...svg.children].forEach((c) => c.tagName !== 'title' && c.remove());
 }
 
+/* Drawing width from the chart's container: clientWidth on an <svg> is unreliable. */
+const widthOf = (svg: Element) => Math.round(svg.parentElement!.getBoundingClientRect().width) || 700;
+
 const diamond = (x: number, y: number, r: number) => `M${x},${y - r}L${x + r},${y}L${x},${y + r}L${x - r},${y}Z`;
 
 function legend(id: string, items: [string, string][]) {
@@ -203,7 +206,7 @@ function renderCloseness(take: Take, a: Anchor) {
 function renderStrip(v: number, rows: [string, number[]][]) {
 	const svg = $<SVGSVGElement & HTMLElement>('strip');
 	clear(svg);
-	const w = svg.clientWidth || 700,
+	const w = widthOf(svg),
 		left = 170,
 		right = 20,
 		rowH = 26;
@@ -235,7 +238,7 @@ function renderStrip(v: number, rows: [string, number[]][]) {
 function renderMap(a: Anchor | null) {
 	const svg = $<SVGSVGElement & HTMLElement>('map');
 	clear(svg);
-	const w = svg.clientWidth || 700,
+	const w = widthOf(svg),
 		h = Math.round(w * 0.62),
 		pad = 34;
 	svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
@@ -341,7 +344,7 @@ function renderBars(take: Take, a: Anchor) {
 	clear(svg);
 	const pt = profile(take.z),
 		pa = profile(a.z);
-	const w = svg.clientWidth || 700,
+	const w = widthOf(svg),
 		left = 190,
 		right = 50,
 		rowH = 30,

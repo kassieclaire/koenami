@@ -1,7 +1,8 @@
 /* Accent lab. Three categorical slots only (take, anchor, anchor region): the validated
    default palette caps scatter-like forms at three hues; regions are told apart by labels. */
-html,
-body {
+/* Out-specify the studio's full-screen html/body rule (as the method page does). */
+html:has(.accent-lab),
+html:has(.accent-lab) body {
 	height: auto;
 	overflow: visible;
 }
@@ -234,7 +235,7 @@ blockquote {
 .chart-wrap {
 	position: relative;
 }
-.tooltip {
+.al-tooltip {
 	position: absolute;
 	pointer-events: none;
 	background: var(--surface);
@@ -247,19 +248,19 @@ blockquote {
 	white-space: nowrap;
 	z-index: 2;
 }
-.legend {
+.al-legend {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 6px 16px;
 	font-size: 12px;
 	color: var(--ink);
 }
-.legend span {
+.al-legend span {
 	display: inline-flex;
 	align-items: center;
 	gap: 6px;
 }
-.legend svg {
+.al-legend svg {
 	width: 12px;
 	height: 12px;
 }
