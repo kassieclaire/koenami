@@ -16,6 +16,7 @@ type Reference = {
 	regions: Region[];
 	explained: number[];
 	heldout_accuracy: number;
+	temperature: number;
 	pair_auc: { overlap: number; distance: number };
 	calibration: { overlap_same: number[]; overlap_diff: number[] };
 	speakers: Speaker[];
@@ -29,7 +30,8 @@ const takes: Take[] = [];
 /* ---------------------------------------------------------------- accent maths */
 
 function profile(z: number[]): number[] {
-	const d2 = ref.regions.map((r) => r.centroid.reduce((s, c, k) => s + (z[k] - c) ** 2, 0));
+	// Softened by the temperature fitted on held-out speakers (accent/build_index.py).
+	const d2 = ref.regions.map((r) => r.centroid.reduce((s, c, k) => s + (z[k] - c) ** 2, 0) / ref.temperature);
 	const min = Math.min(...d2);
 	const p = d2.map((d) => Math.exp(-0.5 * (d - min)));
 	const sum = p.reduce((a, b) => a + b, 0);
@@ -389,8 +391,9 @@ function render() {
 
 /* ---------------------------------------------------------------- page */
 
-const audio = new Audio();
+let audio: HTMLAudioElement | null = null; // created on first use: the page is prerendered without a DOM
 function play(id: string) {
+	audio ??= new Audio();
 	audio.src = `/api/accent/audio/${id}`;
 	void audio.play();
 }

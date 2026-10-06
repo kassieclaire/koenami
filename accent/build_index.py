@@ -98,6 +98,17 @@ def main():
     same = (rl[:, None] == rl[None])[iu]
     to_centroid = np.linalg.norm(zl - space.centroids[[regions.index(r) for r in rl]], axis=1)
     noise = np.linalg.norm(space.transform(h1) - space.transform(h2), axis=1)
+    # Temperature: the raw posterior is overconfident on unseen speakers (held-out log-loss worse
+    # than a uniform guess), so soften it to minimise held-out log-loss on the cross-fitted points.
+    y_idx = np.array([regions.index(r) for r in rl])
+    def nll(t):
+        p = np.stack([space.region_profile(v, t) for v in zl])
+        return -np.mean(np.log(p[np.arange(len(zl)), y_idx] + 1e-12))
+    grid = np.round(np.arange(1, 16.01, 0.25), 2)
+    losses = [nll(t) for t in grid]
+    space.temperature = float(grid[int(np.argmin(losses))])
+    print(f"temperature {space.temperature}: held-out log-loss {min(losses):.3f} (T=1 {losses[0]:.3f}, "
+          f"uniform {np.log(len(regions)):.3f})")
     # Profile overlap (sum of min over regions) is the readout the page leads with: on these
     # speakers it separates same- from different-region pairs better than any distance tried.
     prof = np.stack([space.region_profile(v) for v in zl])
@@ -124,6 +135,7 @@ def main():
                      "centroid": space.centroids[i].round(4).tolist()} for i, r in enumerate(regions)],
         "explained": space.explained.round(4).tolist(),
         "heldout_accuracy": round(acc, 3),
+        "temperature": space.temperature,
         "pair_auc": {"overlap": round(auc_overlap, 3), "distance": round(auc_distance, 3)},
         "calibration": {k: quantiles(v).round(4).tolist() for k, v in
                         [("same_pair", d[iu][same]), ("diff_pair", d[iu][~same]),

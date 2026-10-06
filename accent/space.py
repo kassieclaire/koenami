@@ -83,6 +83,7 @@ class AccentSpace:
     scalings: np.ndarray      # (dim, k) LDA axes, whitened by the within-region spread
     centroids: np.ndarray     # (regions, k) region means in accent space
     explained: np.ndarray = field(default_factory=lambda: np.zeros(0))
+    temperature: float = 1.0  # fitted on held-out speakers in build_index.py
 
     @classmethod
     def fit(cls, x, gender, region, embedder):
@@ -112,20 +113,21 @@ class AccentSpace:
         xp = x - np.outer(np.atleast_2d(x) @ self.w_gender, self.w_gender).reshape(x.shape)
         return ((xp - self.mean) @ self.scalings).astype(np.float32)
 
-    def region_profile(self, z):
-        """LDA posterior over regions with equal priors (the reference set is South-heavy)."""
-        d2 = ((self.centroids - z) ** 2).sum(1)
+    def region_profile(self, z, temperature=None):
+        """LDA posterior over regions with equal priors (the reference set is South-heavy), softened
+        by a temperature: the raw posterior is badly overconfident on speakers the space never saw."""
+        d2 = ((self.centroids - z) ** 2).sum(1) / (temperature or self.temperature)
         p = np.exp(-0.5 * (d2 - d2.min()))
         return p / p.sum()
 
     def save(self, path, **extra):
         np.savez(path, embedder=self.embedder, regions=np.array(self.regions), w_gender=self.w_gender,
                  mean=self.mean, scalings=self.scalings, centroids=self.centroids,
-                 explained=self.explained, **extra)
+                 explained=self.explained, temperature=np.float32(self.temperature), **extra)
 
     @classmethod
     def load(cls, path):
         d = np.load(path, allow_pickle=False)
         space = cls(str(d["embedder"]), [str(r) for r in d["regions"]], d["w_gender"], d["mean"],
-                    d["scalings"], d["centroids"], d["explained"])
+                    d["scalings"], d["centroids"], d["explained"], float(d["temperature"]))
         return space, d
