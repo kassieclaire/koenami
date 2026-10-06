@@ -98,6 +98,14 @@ def main():
     same = (rl[:, None] == rl[None])[iu]
     to_centroid = np.linalg.norm(zl - space.centroids[[regions.index(r) for r in rl]], axis=1)
     noise = np.linalg.norm(space.transform(h1) - space.transform(h2), axis=1)
+    # Profile overlap (sum of min over regions) is the readout the page leads with: on these
+    # speakers it separates same- from different-region pairs better than any distance tried.
+    prof = np.stack([space.region_profile(v) for v in zl])
+    overlap = np.minimum(prof[:, None], prof[None]).sum(-1)[iu]
+    from sklearn.metrics import roc_auc_score
+    auc_overlap = float(roc_auc_score(same, overlap))
+    auc_distance = float(roc_auc_score(same, -d[iu]))
+    print(f"same- vs different-region pair AUC: profile overlap {auc_overlap:.3f}, distance {auc_distance:.3f}")
     print(f"median distance: same-region pair {np.median(d[iu][same]):.2f}, different-region pair "
           f"{np.median(d[iu][~same]):.2f}, speaker to own centroid {np.median(to_centroid):.2f}, "
           f"half-vs-half noise {np.median(noise):.2f}")
@@ -105,6 +113,7 @@ def main():
     space.save(out / f"accent-index-{embedder.name}.npz",
                same_pair=quantiles(d[iu][same]), diff_pair=quantiles(d[iu][~same]),
                to_centroid=quantiles(to_centroid), noise=quantiles(noise),
+               overlap_same=quantiles(overlap[same]), overlap_diff=quantiles(overlap[~same]),
                heldout_accuracy=np.float32(acc), ids=df.speech_sample.str.replace(".mp3", "").to_numpy().astype(str),
                z=z_cf)
     reference = {
@@ -115,9 +124,11 @@ def main():
                      "centroid": space.centroids[i].round(4).tolist()} for i, r in enumerate(regions)],
         "explained": space.explained.round(4).tolist(),
         "heldout_accuracy": round(acc, 3),
+        "pair_auc": {"overlap": round(auc_overlap, 3), "distance": round(auc_distance, 3)},
         "calibration": {k: quantiles(v).round(4).tolist() for k, v in
                         [("same_pair", d[iu][same]), ("diff_pair", d[iu][~same]),
-                         ("to_centroid", to_centroid), ("noise", noise)]},
+                         ("to_centroid", to_centroid), ("noise", noise),
+                         ("overlap_same", overlap[same]), ("overlap_diff", overlap[~same])]},
         "speakers": [{"id": sid.replace(".mp3", ""), "region": df.region[i] or "mixed",
                       "state": df.state[i], "city": str(df.city[i]).strip(),
                       "age": None if np.isnan(df.age[i]) else int(df.age[i]),
