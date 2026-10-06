@@ -188,7 +188,7 @@ function renderCloseness(take: Take, a: Anchor) {
 	} else {
 		same = ref.calibration.overlap_same;
 		other = ref.calibration.overlap_diff;
-		sameName = 'same-region pairs';
+		sameName = 'Same-region pairs';
 		const p = percentile(same, v, true);
 		sentence =
 			`Your take overlaps ${a.label} more than ${p} % of pairs of different speakers from the same region do ` +
@@ -199,7 +199,7 @@ function renderCloseness(take: Take, a: Anchor) {
 	$('overlap-sentence').textContent = sentence;
 	renderStrip(v, [
 		[sameName, same],
-		[a.region && a.region !== 'mixed' ? 'speakers from other regions' : 'different-region pairs', other]
+		[a.region && a.region !== 'mixed' ? 'Other regions' : 'Different-region pairs', other]
 	]);
 }
 
@@ -207,7 +207,7 @@ function renderStrip(v: number, rows: [string, number[]][]) {
 	const svg = $<SVGSVGElement & HTMLElement>('strip');
 	clear(svg);
 	const w = widthOf(svg),
-		left = 170,
+		left = 150,
 		right = 20,
 		rowH = 26;
 	const h = rows.length * rowH + 34;
@@ -216,7 +216,7 @@ function renderStrip(v: number, rows: [string, number[]][]) {
 	const x = (o: number) => left + o * (w - left - right);
 	rows.forEach(([name, values], i) => {
 		const y = 8 + i * rowH;
-		el(svg, 'text', { x: left - 10, y: y + 13, 'text-anchor': 'end' }).textContent = `${name} (middle half)`;
+		el(svg, 'text', { x: left - 10, y: y + 13, 'text-anchor': 'end' }).textContent = name;
 		el(svg, 'rect', {
 			x: x(quantile(values, 0.25)),
 			y,
@@ -273,11 +273,18 @@ function renderMap(a: Anchor | null) {
 		});
 		dots.push({ x: sx(s.z[0]), y: sy(s.z[1]), s, node });
 	}
-	for (const r of ref.regions) {
+	// Region averages, labelled; a label that would overlap one already placed moves down a line.
+	const placed: { x: number; y: number; w: number }[] = [];
+	for (const r of [...ref.regions].sort((p, q) => sy(p.centroid[1]) - sy(q.centroid[1]))) {
 		const cx = sx(r.centroid[0]),
-			cy = sy(r.centroid[1]);
+			cy = sy(r.centroid[1]),
+			text = shortLabel(r.id),
+			tw = text.length * 6.6;
+		let ly = cy - 6;
+		while (placed.some((b) => Math.abs(b.y - ly) < 13 && cx + 7 < b.x + b.w && b.x < cx + 7 + tw)) ly += 13;
+		placed.push({ x: cx + 7, y: ly, w: tw });
 		el(svg, 'path', { d: `M${cx - 5},${cy}h10M${cx},${cy - 5}v10`, class: 'centroid' });
-		el(svg, 'text', { x: cx + 7, y: cy - 6, class: 'label-strong' }).textContent = shortLabel(r.id);
+		el(svg, 'text', { x: cx + 7, y: ly, class: 'label-strong' }).textContent = text;
 	}
 	if (a) {
 		const last = takes[takes.length - 1];
