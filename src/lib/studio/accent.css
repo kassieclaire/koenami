@@ -168,10 +168,14 @@ blockquote {
 	font-size: 14px;
 	line-height: 1.55;
 }
-.chart {
+/* The studio styles every <svg> as a 20 px stroked icon; charts opt out. */
+.accent-lab svg.chart {
 	width: 100%;
+	height: auto;
 	display: block;
 	overflow: visible;
+	fill: initial;
+	stroke: none;
 }
 .chart text {
 	font-size: 11px;

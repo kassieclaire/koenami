@@ -106,6 +106,10 @@ class AccentSpace:
         assert np.allclose(z, z_ref - z_ref.mean(0), atol=1e-3), "accent axes failed to reproduce the LDA"
         lab = region[labelled].astype(str)
         space.centroids = np.stack([z[lab == r].mean(0) for r in space.regions]).astype(np.float32)
+        # Share of the spread between region averages along each axis. (sklearn's
+        # explained_variance_ratio_ spreads over every eigenvalue under shrinkage, so it is not this.)
+        spread = space.centroids.var(0)
+        space.explained = (spread / spread.sum()).astype(np.float32)
         return space
 
     def transform(self, x):
