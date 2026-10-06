@@ -93,8 +93,8 @@ def extract(df):
     print("features:", len(feats))
 
 
-def score(x, g, y, train, test):
-    """Fit nullspace + LDA on `train`, balanced accuracy on `test` (indices into x)."""
+def predict(x, g, y, train, test):
+    """Fit nullspace + LDA on `train`; predicted regions for `test` (indices into x)."""
     from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
     from space import gender_direction
     from probe_invariance import balanced
@@ -104,7 +104,12 @@ def score(x, g, y, train, test):
     xp = unit(xs)
     xp = xp - np.outer(xp @ w, w)
     lda = LinearDiscriminantAnalysis(solver="lsqr", shrinkage="auto").fit(xp[train], y[train])
-    return balanced(y[test], lda.predict(xp[test]))
+    return lda.predict(xp[test])
+
+
+def score(x, g, y, train, test):
+    from probe_invariance import balanced
+    return balanced(y[test], predict(x, g, y, train, test))
 
 
 def evaluate():
@@ -141,13 +146,14 @@ def evaluate():
     out = {}
     for fam, key in family.items():
         x = feats[key].astype(np.float32)
-        acc = score(x, g_all, y_all, dev, test)
-        # Bootstrap the test speakers for an interval; permutation null for chance.
-        from sklearn.discriminant_analysis import LinearDiscriminantAnalysis  # noqa: F401
+        from probe_invariance import balanced
+        pred = predict(x, g_all, y_all, dev, test)
+        acc = balanced(y_all[test], pred)
+        # Bootstrap the test speakers (one fitted model) for an interval.
         boots = []
-        for _ in range(300):
-            bt = rng.choice(test, len(test))
-            boots.append(score(x, g_all, y_all, dev, bt))
+        for _ in range(1000):
+            b = rng.integers(0, len(test), len(test))
+            boots.append(balanced(y_all[test][b], pred[b]))
         out[fam] = {"feature": key, "test": round(acc, 3),
                     "ci95": [round(float(np.quantile(boots, q)), 3) for q in (0.025, 0.975)]}
         print(f"TEST {fam:<24} {key:<28} {acc:.3f}  95% CI {out[fam]['ci95']}", flush=True)
