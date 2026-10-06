@@ -1,0 +1,45 @@
+<svg aria-hidden="true" style="display:none"><defs><symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.4 1.4m11.2 11.2L19 19M5 19l1.4-1.4M17.6 6.4 19 5"/></symbol><symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.7 13.2A9 9 0 0 1 10.8 3.3 9 9 0 1 0 20.7 13.2Z"/></symbol></defs></svg>
+<main class="accent-lab viz-root">
+<div class="review-head"><h1>Accent lab <span class="badge">experimental</span></h1><a href="./en/">Back to the studio</a><button id="theme-button" class="icon-button" title="Toggle light and dark" aria-label="Toggle light and dark"><svg aria-hidden="true"><use href="#i-moon"></use></svg></button></div>
+
+<p class="intro">How close is a recording's American English accent to an anchor: your own everyday accent, a region, or one reference speaker? Every reference speaker read the same paragraph, so read it too; comparisons across different texts are not meaningful.</p>
+<p class="caveat" id="caveat">Loading the reference speakers…</p>
+
+<section class="card">
+ <h2>1. Anchor</h2>
+ <div class="anchor-kinds" role="radiogroup" aria-label="Anchor">
+  <label><input type="radio" name="anchor" value="own" checked> My own accent</label>
+  <label><input type="radio" name="anchor" value="region"> A region</label>
+  <label><input type="radio" name="anchor" value="speaker"> A reference speaker</label>
+ </div>
+ <div class="anchor-pane" data-kind="own"><button id="baseline-record">Record my everyday accent</button><span class="status" id="baseline-status">No baseline yet. Read the paragraph in the voice you use day to day.</span><button id="baseline-clear" class="quiet" hidden>Forget it</button></div>
+ <div class="anchor-pane" data-kind="region" hidden><select id="region-select" aria-label="Region"></select></div>
+ <div class="anchor-pane" data-kind="speaker" hidden><select id="speaker-select" aria-label="Reference speaker"></select><button id="speaker-play" class="quiet">Play</button></div>
+</section>
+
+<section class="card">
+ <h2>2. Read the paragraph</h2>
+ <blockquote id="passage"></blockquote>
+ <div class="actions"><button class="primary" id="take-record">Record a take <kbd>R</kbd></button><label class="upload">or upload audio<input type="file" id="take-upload" accept="audio/*"></label><span class="status" id="take-status" aria-live="polite"></span></div>
+</section>
+
+<section class="card" id="result" hidden>
+ <h2>3. Closeness to the anchor</h2>
+ <div class="hero"><span class="hero-value" id="overlap-value">–</span><span class="hero-label">region-profile overlap<br><small>0 = no shared regions, 1 = identical profiles</small></span></div>
+ <p id="overlap-sentence"></p>
+ <svg id="strip" class="chart" role="img" aria-labelledby="strip-title"><title id="strip-title">Where this overlap falls among reference speakers</title></svg>
+
+ <h3>Accent map</h3>
+ <p class="note" id="map-note"></p>
+ <div class="legend" id="map-legend"></div>
+ <div class="chart-wrap"><svg id="map" class="chart" role="img" aria-labelledby="map-title"><title id="map-title">Reference speakers on the two most region-separating axes, with your take and the anchor</title></svg><div class="tooltip" id="tooltip" hidden></div></div>
+
+ <h3>Region profile</h3>
+ <p class="note">How strongly each recording leans toward each region (equal priors; sums to 100 %).</p>
+ <div class="legend" id="bars-legend"></div>
+ <svg id="bars" class="chart" role="img" aria-labelledby="bars-title"><title id="bars-title">Region profile of the take and the anchor</title></svg>
+ <details><summary>Show as a table</summary><table id="profile-table"></table></details>
+</section>
+
+<footer class="sources" id="sources"></footer>
+</main>

@@ -1,0 +1,284 @@
+/* Accent lab. Three categorical slots only (take, anchor, anchor region): the validated
+   default palette caps scatter-like forms at three hues; regions are told apart by labels. */
+html,
+body {
+	height: auto;
+	overflow: visible;
+}
+.accent-lab {
+	--take: #2a78d6;
+	--anchor: #eb6834;
+	--region-hl: #1baf7a;
+	--ref-dot: #9aa3b8;
+	--band-same: #c9d3e3;
+	--band-other: #e6ebf3;
+	max-width: 860px;
+	margin: 0 auto;
+	padding: 28px 16px 60px;
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+	color: var(--ink);
+}
+:root[data-theme='dark'] .accent-lab {
+	--take: #3987e5;
+	--anchor: #d95926;
+	--region-hl: #199e70;
+	--ref-dot: #5d6380;
+	--band-same: #3c4260;
+	--band-other: #2b2f45;
+}
+.review-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px 14px;
+}
+.review-head h1 {
+	font-size: 17px;
+	margin: 0;
+	color: var(--heading);
+}
+.review-head a {
+	font-size: 12px;
+	color: var(--muted);
+	margin-left: auto;
+}
+.badge {
+	font-size: 11px;
+	font-weight: 500;
+	color: var(--muted);
+	border: 1px solid var(--line);
+	border-radius: 999px;
+	padding: 1px 8px;
+	vertical-align: 2px;
+}
+.intro,
+.caveat,
+.note {
+	margin: 0;
+	font-size: 13px;
+	line-height: 1.55;
+}
+.caveat,
+.note {
+	color: var(--muted);
+}
+.card {
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: 12px;
+	padding: 18px 20px;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+.card h2 {
+	font-size: 14px;
+	margin: 0;
+	color: var(--heading);
+}
+.card h3 {
+	font-size: 13px;
+	margin: 10px 0 0;
+	color: var(--heading);
+}
+.anchor-kinds {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px 18px;
+	font-size: 13px;
+}
+.anchor-pane,
+.actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px 12px;
+	font-size: 13px;
+}
+.accent-lab button,
+.accent-lab select {
+	font: inherit;
+	font-size: 13px;
+	color: var(--ink);
+	background: var(--raised);
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	padding: 6px 12px;
+	cursor: pointer;
+}
+.accent-lab button.primary {
+	background: var(--accent);
+	border-color: var(--accent);
+	color: #fff;
+}
+.accent-lab button.recording {
+	background: var(--danger);
+	border-color: var(--danger);
+	color: #fff;
+}
+.accent-lab button.quiet {
+	background: transparent;
+}
+.accent-lab kbd {
+	font-size: 11px;
+	opacity: 0.8;
+	margin-left: 4px;
+}
+.upload {
+	color: var(--muted);
+	cursor: pointer;
+	text-decoration: underline;
+}
+.upload input {
+	display: none;
+}
+.status {
+	color: var(--muted);
+}
+blockquote {
+	margin: 0;
+	padding: 12px 14px;
+	background: var(--raised);
+	border-radius: 8px;
+	font-size: 15px;
+	line-height: 1.7;
+	color: var(--heading);
+}
+.hero {
+	display: flex;
+	align-items: baseline;
+	gap: 14px;
+}
+.hero-value {
+	font-size: 40px;
+	font-weight: 600;
+	color: var(--heading);
+	font-variant-numeric: tabular-nums;
+}
+.hero-label {
+	font-size: 13px;
+	color: var(--muted);
+	line-height: 1.4;
+}
+#overlap-sentence {
+	margin: 0;
+	font-size: 14px;
+	line-height: 1.55;
+}
+.chart {
+	width: 100%;
+	display: block;
+	overflow: visible;
+}
+.chart text {
+	font-size: 11px;
+	fill: var(--muted);
+}
+.chart .label-strong {
+	fill: var(--heading);
+	font-weight: 600;
+}
+.chart .axis {
+	stroke: var(--grid);
+	stroke-width: 1;
+}
+.chart .ref {
+	fill: var(--ref-dot);
+	fill-opacity: 0.55;
+}
+.chart .ref.hl {
+	fill: var(--region-hl);
+	fill-opacity: 0.85;
+}
+.chart .ref.hover {
+	stroke: var(--heading);
+	stroke-width: 1.5;
+	fill-opacity: 1;
+}
+.chart .centroid {
+	stroke: var(--heading);
+	stroke-width: 1.5;
+}
+.chart .take {
+	fill: var(--take);
+	stroke: var(--surface);
+	stroke-width: 2;
+}
+.chart .take.past {
+	fill-opacity: 0.35;
+}
+.chart .anchor {
+	fill: var(--anchor);
+	stroke: var(--surface);
+	stroke-width: 2;
+}
+.chart .link {
+	stroke: var(--muted);
+	stroke-width: 1.5;
+	stroke-dasharray: 4 4;
+}
+.chart .bar-take {
+	fill: var(--take);
+}
+.chart .bar-anchor {
+	fill: var(--anchor);
+}
+.chart .band-same {
+	fill: var(--band-same);
+}
+.chart .band-other {
+	fill: var(--band-other);
+}
+.chart-wrap {
+	position: relative;
+}
+.tooltip {
+	position: absolute;
+	pointer-events: none;
+	background: var(--surface);
+	border: 1px solid var(--line);
+	box-shadow: var(--shadow);
+	border-radius: 8px;
+	padding: 6px 9px;
+	font-size: 12px;
+	line-height: 1.4;
+	white-space: nowrap;
+	z-index: 2;
+}
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px 16px;
+	font-size: 12px;
+	color: var(--ink);
+}
+.legend span {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+.legend svg {
+	width: 12px;
+	height: 12px;
+}
+details {
+	font-size: 13px;
+}
+table {
+	border-collapse: collapse;
+	margin-top: 8px;
+	font-variant-numeric: tabular-nums;
+}
+th,
+td {
+	text-align: left;
+	padding: 3px 14px 3px 0;
+	border-bottom: 1px solid var(--line);
+}
+.sources {
+	font-size: 12px;
+	color: var(--muted);
+	line-height: 1.6;
+}

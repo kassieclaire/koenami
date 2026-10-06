@@ -564,6 +564,11 @@ def create_app():
     app.router.add_post('/api/words', words)
     app.router.add_get('/samples/{file}', sample)
     app.router.add_get('/data/{file}', data_file)
+    # Experimental accent page (fork only): local runs with a built accent index.
+    if not PUBLIC:
+        try: from accent.routes import add_accent_routes
+        except ImportError as error: print(f'Accent page is off: {error}', flush=True)
+        else: add_accent_routes(app, DATA, read_audio, respond, neural_gate)
 
     # Local option: serve the built site from the API process, so the review pages and the studio run without
     # the Kit dev server (whose workerd has leaked past the dev-server memory cap on this machine).
