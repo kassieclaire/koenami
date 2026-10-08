@@ -60,7 +60,7 @@ def main():
     }
     rows = []
     for name, x in cands.items():
-        for pca in (None, 64, 128, 256):
+        for pca in (None, 64, 128):  # dev folds hold ~231 speakers
             accs = []
             for seed in (0, 1, 2):
                 for tr, te in StratifiedKFold(5, shuffle=True, random_state=seed).split(dev, y[dev]):
