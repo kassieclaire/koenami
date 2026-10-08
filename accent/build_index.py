@@ -58,7 +58,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--audio", required=True)
     ap.add_argument("--meta", required=True)
-    ap.add_argument("--embedder", choices=sorted(EMBEDDERS), default="gemma-wavlm")
+    ap.add_argument("--embedder", choices=sorted(EMBEDDERS), default="gemma")
     ap.add_argument("--out", default="data")
     args = ap.parse_args()
     out = Path(args.out)

@@ -22,7 +22,7 @@ SPEAKER = re.compile(r"^english\d+$")
 
 
 def add_accent_routes(app, data, read_audio, respond, gate):
-    name = os.environ.get("KOENAMI_ACCENT", "gemma2-a10ms+wavlm-l11ms")
+    name = os.environ.get("KOENAMI_ACCENT", "gemma2-a10ms")
     index, reference = data / f"accent-index-{name}.npz", data / f"accent-reference-{name}.json"
     if not index.exists() or not reference.exists():
         print(f"Accent page is off: no {index.name}; run accent/build_index.py", flush=True)

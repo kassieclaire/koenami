@@ -1,19 +1,23 @@
 """A gender-invariant American English accent space, fitted on labelled reference speakers.
 
-Recipe, chosen on a dev split of 427 Speech Accent Archive speakers who all read the same
-paragraph (probe_gemma.py, probe_gemma_refine.py; the earlier probes are kept for the record):
+Recipe, chosen on 427 Speech Accent Archive speakers who all read the same paragraph. The
+probes are kept for the record; probe_readouts.py made the final call, scoring each candidate
+fold-honestly on the readouts this page shows:
 
-  features   EmbeddingGemma 2 audio-tower layer 10 + WavLM Base+ layer 11, each pooled as the
-             mean and standard deviation over frames ("gemma-wavlm", the default)
-  standardise per dimension on the reference speakers, PCA to 128, rescale, unit length
+  features   EmbeddingGemma 2 audio-tower layer 10, mean and standard deviation over frames
+             ("gemma", the default). The model's own pooled embedding carries little accent
+             (it is trained for meaning); the audio tower's upper layers carry most.
+  standardise per dimension on the reference speakers, then unit length. No PCA: it helped
+             classification but collapsed the region averages together in this geometry.
   gender     remove the gender-predictive direction twice (iterative nullspace projection,
-             fitted on the reference speakers; a take needs no gender label). One round left
-             gender 54-62 % recoverable on held-out speakers, two leave it at chance.
+             fitted on the reference speakers; a take needs no gender label). Gender is then
+             recoverable for 52 % of held-out speakers (chance 50 %); the earlier WavLM page
+             with one round leaked 70 %.
   LDA        shrinkage LDA over dialect regions; coordinates are whitened by the within-region
              spread, so distances are in units of typical variation among one region's speakers.
 
-Held-out test accuracy (30 % of speakers, never used for selection) is about 25 % over 8 regions
-(chance 12.5 %). Birthplace is a proxy for accent; treat every reading as approximate.
+Held-out region accuracy is about 27 % over 8 regions (chance 12.5 %). Birthplace is a proxy for
+accent; treat every reading as approximate.
 """
 
 from dataclasses import dataclass, field
@@ -80,9 +84,10 @@ def _device():
 
 
 class GemmaWavLMEmbedder:
-    """Default: Gemma audio-tower layer 10 and WavLM layer 11, both mean+std pooled."""
+    """Gemma audio-tower layer 10 and WavLM layer 11, both mean+std pooled: no better than Gemma
+    alone on the page's readouts, with a second model to run."""
     name = "gemma2-a10ms+wavlm-l11ms"
-    recipe = {"pca": 128, "rounds": 2}
+    recipe = {"pca": None, "rounds": 2}
 
     def __init__(self, device=None):
         device = device or _device()
@@ -94,7 +99,7 @@ class GemmaWavLMEmbedder:
 
 
 class GemmaAudioEmbedder:
-    """Gemma alone: audio-tower layer 10, mean+std pooled (best Gemma-only setting)."""
+    """Default: Gemma audio-tower layer 10, mean+std pooled."""
     name = "gemma2-a10ms"
     recipe = {"pca": None, "rounds": 2}
 
