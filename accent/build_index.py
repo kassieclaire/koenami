@@ -11,7 +11,7 @@ rotated onto the full space (orthogonal Procrustes on the shared training speake
 reference clusters are not tighter on screen than the space can tell apart.
 
 Run (GPU host):
-  .venv/bin/python accent/build_index.py --audio data/saa_mp3 --meta speaker_information.xlsx --embedder wavlm
+  .venv-accent/bin/python accent/build_index.py --audio data/saa_mp3 --meta data/speaker_information.xlsx
 """
 
 import argparse
@@ -58,7 +58,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--audio", required=True)
     ap.add_argument("--meta", required=True)
-    ap.add_argument("--embedder", choices=sorted(EMBEDDERS), default="wavlm")
+    ap.add_argument("--embedder", choices=sorted(EMBEDDERS), default="gemma-wavlm")
     ap.add_argument("--out", default="data")
     args = ap.parse_args()
     out = Path(args.out)
@@ -71,15 +71,21 @@ def main():
     region = np.array([r if r and r != "mixed" else None for r in df.region], dtype=object)
     lab = np.flatnonzero([r is not None for r in region])
 
-    space = AccentSpace.fit(x, gender, region, embedder.name)
+    recipe = embedder.recipe
+    space = AccentSpace.fit(x, gender, region, embedder.name, **recipe)
     z_full = space.transform(x)
 
     # Cross-fitted coordinates for the labelled speakers.
     z_cf = z_full.copy()
-    correct = []
+    correct, leak_true, leak_pred = [], [], []
     for tr, te in StratifiedKFold(10, shuffle=True, random_state=0).split(lab, region[lab].astype(str)):
         train = np.setdiff1d(np.arange(len(df)), lab[te])
-        fold = AccentSpace.fit(x[train], gender[train], region[train], embedder.name)
+        fold = AccentSpace.fit(x[train], gender[train], region[train], embedder.name, **recipe)
+        # Gender leakage, fold-honest: can gender still be read off speakers the projection never saw?
+        from sklearn.linear_model import LogisticRegression
+        clf = LogisticRegression(max_iter=3000).fit(fold.project(x[train]), gender[train])
+        leak_true += list(gender[lab[te]])
+        leak_pred += list(clf.predict(fold.project(x[lab[te]])))
         a, b = fold.transform(x[train]), z_full[train]
         ma, mb = a.mean(0), b.mean(0)
         r, _ = orthogonal_procrustes(a - ma, b - mb)
@@ -90,6 +96,9 @@ def main():
     regions = space.regions
     acc = float(np.mean([np.mean([p == t for t, p in correct if t == r]) for r in regions]))
     print(f"held-out region accuracy (balanced, nearest centroid): {acc:.3f}  chance {1 / len(regions):.3f}")
+    lt, lp = np.array(leak_true), np.array(leak_pred)
+    leak = float(np.mean([np.mean(lp[lt == c] == c) for c in np.unique(lt)]))
+    print(f"gender recoverable after projection (held-out, balanced): {leak:.3f}  chance 0.500")
 
     # Calibration distributions, all from cross-fitted coordinates.
     zl, rl = z_cf[lab], region[lab].astype(str)
@@ -136,6 +145,8 @@ def main():
         "explained": space.explained.round(4).tolist(),
         "heldout_accuracy": round(acc, 3),
         "temperature": space.temperature,
+        "gender_leak": round(leak, 3),
+        "recipe": {"pca": recipe["pca"], "gender_rounds": recipe["rounds"]},
         "pair_auc": {"overlap": round(auc_overlap, 3), "distance": round(auc_distance, 3)},
         "calibration": {k: quantiles(v).round(4).tolist() for k, v in
                         [("same_pair", d[iu][same]), ("diff_pair", d[iu][~same]),

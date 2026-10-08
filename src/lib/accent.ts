@@ -17,6 +17,7 @@ type Reference = {
 	explained: number[];
 	heldout_accuracy: number;
 	temperature: number;
+	gender_leak: number;
 	pair_auc: { overlap: number; distance: number };
 	calibration: { overlap_same: number[]; overlap_diff: number[] };
 	speakers: Speaker[];
@@ -443,8 +444,9 @@ export async function mountAccent() {
 		`${Math.round(ref.heldout_accuracy * 100)} % of the time (chance ${Math.round(100 / ref.regions.length)} %), and its ` +
 		`overlap score only modestly separates same-region from different-region speakers (AUC ${ref.pair_auc.overlap.toFixed(2)}, ` +
 		`where 0.5 is chance). Read it as a rough tendency, never a verdict on anyone's accent. Gender-predictive directions are ` +
-		`removed so that changing how your voice reads for gender should not move you here; that was checked on the reference ` +
-		`speakers, not yet on people in training. Embedder: ${ref.embedder}.`;
+		`removed so that changing how your voice reads for gender should not move you here: afterwards, gender can be read off ` +
+		`${Math.round(ref.gender_leak * 100)} % of speakers the model never saw (chance 50 %). That was checked on the reference ` +
+		`speakers, not yet on people in training. Features: ${ref.embedder}.`;
 	$('passage').textContent = ref.passage;
 	$('sources').innerHTML =
 		`Reference recordings: ${ref.source} (<a href="https://accent.gmu.edu/">accent.gmu.edu</a>, ` +

@@ -15,26 +15,25 @@ import re
 import numpy as np
 from aiohttp import web
 
-from .space import EMBEDDERS, SR, AccentSpace
+from .space import BY_NAME, SR, AccentSpace
 
 MIN_SECONDS = 5
 SPEAKER = re.compile(r"^english\d+$")
 
 
 def add_accent_routes(app, data, read_audio, respond, gate):
-    name = os.environ.get("KOENAMI_ACCENT", "wavlm-base-plus-l8")
+    name = os.environ.get("KOENAMI_ACCENT", "gemma2-a10ms+wavlm-l11ms")
     index, reference = data / f"accent-index-{name}.npz", data / f"accent-reference-{name}.json"
     if not index.exists() or not reference.exists():
         print(f"Accent page is off: no {index.name}; run accent/build_index.py", flush=True)
         return
     space, d = AccentSpace.load(index)
     ids, z_ref = [str(i) for i in d["ids"]], d["z"]
-    kind = "gemma" if name.startswith("embeddinggemma") else "wavlm"
     embedder = {}
 
     def embed(x):
         if "model" not in embedder:
-            embedder["model"] = EMBEDDERS[kind]()
+            embedder["model"] = BY_NAME[space.embedder]()
         return embedder["model"](x)
 
     async def accent_reference(request):
