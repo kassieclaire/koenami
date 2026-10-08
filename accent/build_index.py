@@ -113,9 +113,10 @@ def main():
     def nll(t):
         p = np.stack([space.region_profile(v, t) for v in zl])
         return -np.mean(np.log(p[np.arange(len(zl)), y_idx] + 1e-12))
-    grid = np.round(np.arange(1, 16.01, 0.25), 2)
+    grid = np.round(np.geomspace(1, 128, 85), 2)  # log scale: high-dimensional features need large T
     losses = [nll(t) for t in grid]
     space.temperature = float(grid[int(np.argmin(losses))])
+    assert space.temperature < grid[-1], "temperature at the top of the grid; widen it"
     print(f"temperature {space.temperature}: held-out log-loss {min(losses):.3f} (T=1 {losses[0]:.3f}, "
           f"uniform {np.log(len(regions)):.3f})")
     # Profile overlap (sum of min over regions) is the readout the page leads with: on these
